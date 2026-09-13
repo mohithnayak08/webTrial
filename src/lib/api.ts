@@ -17,7 +17,7 @@ export interface AuthUser {
   name: string;
 }
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 // ==========================================
 // 1. AUTHENTICATION CLIENT APIS
@@ -27,15 +27,22 @@ export async function loginApi(
   identifier: string,
   password: string
 ): Promise<{ success: boolean; user: AuthUser }> {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ identifier, password }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ identifier, password }),
+    });
+  } catch {
+    throw new Error(
+      'Unable to reach the backend. Start the Express server with "npm run server" and open the app through the Vite URL.'
+    );
+  }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText || 'Unable to reach backend server' }));
+    const err = await res.json().catch(() => ({ error: `Backend returned HTTP ${res.status}.` }));
     throw new Error(err.error || `Authentication failed (HTTP ${res.status})`);
   }
 
