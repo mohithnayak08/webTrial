@@ -1,0 +1,438 @@
+import { AppState, Student, Teacher } from '../types';
+import {
+  calculateAttendancePct,
+  calculateGpa,
+  deriveAvatarInitials,
+  deriveStatus,
+} from './derived';
+
+export const initialTeacher: Teacher = {
+  id: 'TCH-01',
+  name: 'Dr. Eleanor Vance',
+  email: 'e.vance@school.edu',
+};
+
+// Raw seed data to pass through calculator logic
+const rawSeedStudents: Omit<
+  Student,
+  'gpa' | 'attendancePct' | 'status' | 'avatarInitials'
+>[] = [
+  // 1. Aisha Khan (Top performer - Good)
+  {
+    id: 'STU-1001',
+    name: 'Aisha Khan',
+    email: 'aisha.khan@student.school.edu',
+    section: 'Grade 10 - A',
+    grades: [
+      { subject: 'Mathematics', score: 94, letter: 'A', remark: 'Superb problem-solving skills in quadratic calculus.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 91, letter: 'A', remark: 'Excellent lab report on electromagnetic induction.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 88, letter: 'B', remark: 'Strong conceptual grasp, minor calculation slips in stoichiometry.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 92, letter: 'A', remark: 'Thoughtful analysis on contemporary world literature.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 98, letter: 'A', remark: 'Outstanding data structures implementation.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'present' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'late' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-101', date: '2026-09-09T15:30:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Consistently proactive in class discussions and peer mentoring.' },
+      { id: 'FB-102', date: '2026-08-28T11:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Submitted robotics project ahead of deadline with stellar documentation.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 2. Rohan Mehta (Strong STEM - Good)
+  {
+    id: 'STU-1002',
+    name: 'Rohan Mehta',
+    email: 'rohan.mehta@student.school.edu',
+    section: 'Grade 10 - A',
+    grades: [
+      { subject: 'Mathematics', score: 95, letter: 'A', remark: 'Near-perfect algebraic geometry test score.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 86, letter: 'B', remark: 'Solid grasp of kinematics and energy principles.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 82, letter: 'B', remark: 'Consistent lab attendance and accurate titrations.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 84, letter: 'B', remark: 'Well-structured essays with concise thesis statements.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 91, letter: 'A', remark: 'Fast algorithms and clean modular code.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'late' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'present' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'excused' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-103', date: '2026-09-08T14:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Demonstrated high aptitude in the regional math olympiad.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 3. Liam O'Connor (Good)
+  {
+    id: 'STU-1003',
+    name: "Liam O'Connor",
+    email: 'liam.oconnor@student.school.edu',
+    section: 'Grade 10 - B',
+    grades: [
+      { subject: 'Mathematics', score: 85, letter: 'B', remark: 'Good analytical progress this semester.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 82, letter: 'B', remark: 'Good understanding of thermodynamic laws.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 90, letter: 'A', remark: 'Exceptional organic chemistry reaction mechanisms.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 88, letter: 'B', remark: 'Great rhetorical analysis in debate presentation.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 85, letter: 'B', remark: 'Competent web markup and styling techniques.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'present' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'late' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-104', date: '2026-09-05T12:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Active participant in science fair preparatory workshops.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 4. Maya Lin (Valedictorian candidate - Good)
+  {
+    id: 'STU-1004',
+    name: 'Maya Lin',
+    email: 'maya.lin@student.school.edu',
+    section: 'Grade 10 - B',
+    grades: [
+      { subject: 'Mathematics', score: 99, letter: 'A', remark: 'Faultless mathematical reasoning throughout tests.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 97, letter: 'A', remark: 'Flawless execution of complex experimental optics.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 96, letter: 'A', remark: 'Comprehensive mastery of atomic models.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 94, letter: 'A', remark: 'Brilliant stylistic flair in argumentative essays.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 100, letter: 'A', remark: 'Perfect score on system architecture final quiz.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'present' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'present' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-105', date: '2026-09-11T16:30:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Exemplary academic discipline and leadership in study groups.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-11T16:30:00Z',
+  },
+
+  // 5. Carlos Rivera (Solid - Good)
+  {
+    id: 'STU-1005',
+    name: 'Carlos Rivera',
+    email: 'carlos.rivera@student.school.edu',
+    section: 'Grade 10 - A',
+    grades: [
+      { subject: 'Mathematics', score: 81, letter: 'B', remark: 'Steady improvement in coordinate geometry.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 84, letter: 'B', remark: 'Shows intuitive grasp of mechanical concepts.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 91, letter: 'A', remark: 'High scores on chemical bonding unit tests.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 83, letter: 'B', remark: 'Participates regularly with good analytical feedback.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 88, letter: 'B', remark: 'Consistent coding homework submissions.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'present' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'present' },
+      { date: '2026-09-10', status: 'late' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-106', date: '2026-09-04T10:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Continues to show steady academic dedication.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 6. Priya Sharma (High grades, but attendance < 90% -> Warning)
+  {
+    id: 'STU-1006',
+    name: 'Priya Sharma',
+    email: 'priya.sharma@student.school.edu',
+    section: 'Grade 10 - B',
+    grades: [
+      { subject: 'Mathematics', score: 92, letter: 'A', remark: 'High aptitude; easily grasps abstract concepts.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 89, letter: 'B', remark: 'Good test scores, needs to turn in lab logs promptly.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 94, letter: 'A', remark: 'Strong conceptual test retention.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 85, letter: 'B', remark: 'Well-written essays though missed one presentation.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 91, letter: 'A', remark: 'Clever algorithm solutions.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'absent' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'absent' },
+      { date: '2026-09-05', status: 'present' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'late' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-107', date: '2026-09-04T16:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Notice sent regarding unexcused morning absences. Academic capability is high.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 7. David Kim (Moderate grades -> Warning)
+  {
+    id: 'STU-1007',
+    name: 'David Kim',
+    email: 'david.kim@student.school.edu',
+    section: 'Grade 10 - A',
+    grades: [
+      { subject: 'Mathematics', score: 72, letter: 'C', remark: 'Needs extra drill with algebraic fractions.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 75, letter: 'C', remark: 'Struggling with vector resolution formulas.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 80, letter: 'B', remark: 'Good effort in laboratory activities.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 78, letter: 'C', remark: 'Reading comprehension is good, needs grammar review.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 81, letter: 'B', remark: 'Understands basic conditional loops.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'late' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'absent' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'present' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'late' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-108', date: '2026-09-07T11:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Recommended attending Wednesday math peer tutoring.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 8. Zoe Washington (Warning)
+  {
+    id: 'STU-1008',
+    name: 'Zoe Washington',
+    email: 'zoe.washington@student.school.edu',
+    section: 'Grade 10 - B',
+    grades: [
+      { subject: 'Mathematics', score: 79, letter: 'C', remark: 'Borderline between B and C; quiz corrections pending.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 76, letter: 'C', remark: 'Needs more focus during problem-solving sessions.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 83, letter: 'B', remark: 'Good comprehension of gas laws.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 88, letter: 'B', remark: 'Expressive writing in creative non-fiction unit.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 74, letter: 'C', remark: 'Debugging syntax errors requires more practice.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'absent' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'late' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'present' },
+      { date: '2026-09-10', status: 'absent' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-109', date: '2026-09-08T15:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Parent notified of mid-term progress and attendance slips.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 9. Ethan Patel (Warning - GPA ~2.4)
+  {
+    id: 'STU-1009',
+    name: 'Ethan Patel',
+    email: 'ethan.patel@student.school.edu',
+    section: 'Grade 10 - A',
+    grades: [
+      { subject: 'Mathematics', score: 70, letter: 'C', remark: 'Passing grade achieved, needs regular revision.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 73, letter: 'C', remark: 'Formula retention is improving.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 74, letter: 'C', remark: 'Follows safety protocols, struggles on theoretical tests.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 81, letter: 'B', remark: 'Good vocabulary and oral participation.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 78, letter: 'C', remark: 'Capable logic, needs to test edge cases.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'present' },
+      { date: '2026-09-08', status: 'late' },
+      { date: '2026-09-09', status: 'present' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-110', date: '2026-09-03T09:30:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Encouraged to submit missing science homework sheets.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 10. Marcus Bennett (Critical - Attendance < 75%)
+  {
+    id: 'STU-1010',
+    name: 'Marcus Bennett',
+    email: 'marcus.bennett@student.school.edu',
+    section: 'Grade 10 - B',
+    grades: [
+      { subject: 'Mathematics', score: 75, letter: 'C', remark: 'Missed crucial lectures on polynomial division.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 71, letter: 'C', remark: 'Lab attendance is deficient; cannot complete group work.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 78, letter: 'C', remark: 'Decent performance when present in class.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 72, letter: 'C', remark: 'Multiple missing reading comprehension checks.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 80, letter: 'B', remark: 'Self-taught programming skill is evident.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'absent' },
+      { date: '2026-09-02', status: 'absent' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'absent' },
+      { date: '2026-09-05', status: 'absent' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'present' },
+      { date: '2026-09-10', status: 'late' },
+      { date: '2026-09-11', status: 'absent' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-111', date: '2026-09-11T09:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'URGENT: Truancy counselor intervention requested due to repeated unexcused absences.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-11T09:00:00Z',
+  },
+
+  // 11. Sophia Chen (Critical - GPA < 2.0)
+  {
+    id: 'STU-1011',
+    name: 'Sophia Chen',
+    email: 'sophia.chen@student.school.edu',
+    section: 'Grade 10 - A',
+    grades: [
+      { subject: 'Mathematics', score: 54, letter: 'F', remark: 'Significant difficulty with fundamental algebraic concepts.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 58, letter: 'F', remark: 'Failed the first two quizzes. Remedial assistance scheduled.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 62, letter: 'D', remark: 'Barely passing. Needs urgent tutor support.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 68, letter: 'D', remark: 'Incomplete essay submissions impact overall score.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 61, letter: 'D', remark: 'Struggling with logic building and loop syntax.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'present' },
+      { date: '2026-09-02', status: 'present' },
+      { date: '2026-09-03', status: 'present' },
+      { date: '2026-09-04', status: 'present' },
+      { date: '2026-09-05', status: 'late' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'absent' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'present' },
+      { date: '2026-09-12', status: 'present' },
+    ],
+    feedback: [
+      { id: 'FB-112', date: '2026-09-09T14:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'Academic probation warning: individualized learning plan initiated with student services.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-10T16:00:00Z',
+  },
+
+  // 12. Tariq Al-Mansoor (Critical - Low GPA & Low Attendance)
+  {
+    id: 'STU-1012',
+    name: 'Tariq Al-Mansoor',
+    email: 'tariq.almansoor@student.school.edu',
+    section: 'Grade 10 - B',
+    grades: [
+      { subject: 'Mathematics', score: 52, letter: 'F', remark: 'Frequent absence has severely undermined exam readiness.', updatedAt: '2026-09-08T10:00:00Z' },
+      { subject: 'Physics', score: 55, letter: 'F', remark: 'Did not attend key experimental assessments.', updatedAt: '2026-09-07T11:30:00Z' },
+      { subject: 'Chemistry', score: 59, letter: 'F', remark: 'Incomplete assignments in all recent units.', updatedAt: '2026-09-05T09:15:00Z' },
+      { subject: 'English', score: 65, letter: 'D', remark: 'Capable speaker, but written portfolio is mostly blank.', updatedAt: '2026-09-06T14:00:00Z' },
+      { subject: 'Computer Science', score: 58, letter: 'F', remark: 'Missed terminal project milestone.', updatedAt: '2026-09-10T16:00:00Z' },
+    ],
+    attendance: [
+      { date: '2026-09-01', status: 'absent' },
+      { date: '2026-09-02', status: 'absent' },
+      { date: '2026-09-03', status: 'absent' },
+      { date: '2026-09-04', status: 'late' },
+      { date: '2026-09-05', status: 'absent' },
+      { date: '2026-09-08', status: 'present' },
+      { date: '2026-09-09', status: 'absent' },
+      { date: '2026-09-10', status: 'present' },
+      { date: '2026-09-11', status: 'absent' },
+      { date: '2026-09-12', status: 'late' },
+    ],
+    feedback: [
+      { id: 'FB-113', date: '2026-09-12T11:00:00Z', teacherId: 'TCH-01', teacherName: 'Dr. Eleanor Vance', message: 'CRITICAL CASE: Formal meeting with administration and guardians scheduled.' },
+    ],
+    createdAt: '2026-08-15T08:00:00Z',
+    updatedAt: '2026-09-12T11:00:00Z',
+  },
+];
+
+// Compute and export the initialized mock students list
+export const initialStudents: Student[] = rawSeedStudents.map((raw) => {
+  const gpa = calculateGpa(raw.grades);
+  const attendancePct = calculateAttendancePct(raw.attendance);
+  const status = deriveStatus(gpa, attendancePct);
+  const avatarInitials = deriveAvatarInitials(raw.name);
+
+  return {
+    ...raw,
+    gpa,
+    attendancePct,
+    status,
+    avatarInitials,
+  };
+});
+
+export const initialAppState: AppState = {
+  currentRole: 'teacher',
+  currentStudentId: null,
+  teacher: initialTeacher,
+  students: initialStudents,
+  ui: {
+    search: '',
+    filters: {
+      gradeBand: null,
+      attendanceStatus: null,
+    },
+    sort: {
+      column: 'name',
+      direction: 'asc',
+    },
+  },
+};

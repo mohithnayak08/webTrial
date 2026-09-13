@@ -1,0 +1,6 @@
+node_modules
+dist
+.env
+.atlas-keys
+*.local
+.DS_Store
