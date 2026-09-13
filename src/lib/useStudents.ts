@@ -1,4 +1,5 @@
 import { useAppState } from './useAppState';
+import { useAuth } from '../context/AuthContext';
 import { Student } from '../types';
 
 export interface UseStudentsResult {
@@ -13,8 +14,11 @@ export interface UseStudentsResult {
  */
 export function useStudents(): UseStudentsResult {
   const { state } = useAppState();
+  const { user } = useAuth();
 
-  if (state.currentRole !== 'teacher') {
+  const isTeacher = user ? user.role === 'teacher' : state.currentRole === 'teacher';
+
+  if (!isTeacher) {
     return {
       isAuthorized: false,
       students: [],

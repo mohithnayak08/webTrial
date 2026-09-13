@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Topbar } from './Topbar';
 import { Sidebar } from './Sidebar';
 import { useAppState } from '../../lib/useAppState';
+import { useAuth } from '../../context/AuthContext';
 
 interface AppShellProps {
   children: (props: {
@@ -12,18 +13,21 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { state } = useAppState();
+  const { user } = useAuth();
+  const isTeacher = user ? user.role === 'teacher' : state.currentRole === 'teacher';
+
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const v = new URLSearchParams(window.location.search).get('view');
       if (v) return v;
     }
-    return state.currentRole === 'teacher' ? 'overview' : 'my-performance';
+    return isTeacher ? 'overview' : 'my-performance';
   });
 
   // Automatically adjust default active view when simulated role changes
   useEffect(() => {
-    if (state.currentRole === 'teacher') {
+    if (isTeacher) {
       if (activeView === 'my-performance' || activeView === 'grades' || activeView === 'attendance' || activeView === 'feedback') {
         setActiveView('overview');
       }
@@ -32,7 +36,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         setActiveView('my-performance');
       }
     }
-  }, [state.currentRole, activeView]);
+  }, [isTeacher, activeView]);
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen((prev) => !prev);

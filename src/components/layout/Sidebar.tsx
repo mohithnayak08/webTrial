@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppState } from '../../lib/useAppState';
+import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
   Users,
@@ -28,9 +29,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectView,
 }) => {
   const { state } = useAppState();
+  const { user } = useAuth();
 
-  const currentStudent = state.currentStudentId
-    ? state.students.find((s) => s.id === state.currentStudentId)
+  const isTeacher = user ? user.role === 'teacher' : state.currentRole === 'teacher';
+  const activeStudentId = user?.studentId || state.currentStudentId;
+
+  const currentStudent = activeStudentId
+    ? state.students.find((s) => s.id === activeStudentId)
     : null;
 
   const handleNavClick = (view: string) => {
@@ -63,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         `}
       >
         <div className="p-3 space-y-6 overflow-y-auto">
-          {state.currentRole === 'teacher' ? (
+          {isTeacher ? (
             /* =========================================
                TEACHER NAVIGATION CONSOLE (§2.2)
                ========================================= */
@@ -309,7 +314,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Footer Meta */}
         <div className="p-3 border-t border-border-subtle text-xs text-text-muted flex items-center justify-between">
           <span className="tabular-nums font-mono text-[11px]">
-            {state.currentRole === 'teacher' ? 'Faculty Mode' : 'Student Mode'}
+            {isTeacher ? 'Faculty Mode' : 'Student Mode'}
           </span>
           <span className="flex items-center gap-1 text-[11px] text-text-muted">
             <ShieldCheck size={13} className="text-accent-primary" /> Guarded

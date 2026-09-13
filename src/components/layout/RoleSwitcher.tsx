@@ -1,22 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppState } from '../../lib/useAppState';
+import { useAuth } from '../../context/AuthContext';
 import {
   Check,
   ChevronDown,
   GraduationCap,
   Search,
   Shield,
+  Loader2,
 } from 'lucide-react';
 
 export const RoleSwitcher: React.FC = () => {
-  const { state, setRole } = useAppState();
+  const { state } = useAppState();
+  const { user, login } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [filterQuery, setFilterQuery] = useState('');
+  const [isSwitching, setIsSwitching] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const currentStudent = state.currentStudentId
-    ? state.students.find((s) => s.id === state.currentStudentId)
+  const activeRole = user ? user.role : state.currentRole;
+  const activeStudentId = user?.studentId || state.currentStudentId;
+
+  const currentStudent = activeStudentId
+    ? state.students.find((s) => s.id === activeStudentId)
     : null;
 
   // Close on outside click
@@ -50,14 +57,28 @@ export const RoleSwitcher: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleSelectTeacher = () => {
-    setRole('teacher', null);
+  const handleSelectTeacher = async () => {
+    setIsSwitching(true);
     setIsOpen(false);
+    try {
+      await login('e.vance@school.edu', 'Teacher123!');
+    } catch (err) {
+      console.error('Failed to switch to teacher account:', err);
+    } finally {
+      setIsSwitching(false);
+    }
   };
 
-  const handleSelectStudent = (studentId: string) => {
-    setRole('student', studentId);
+  const handleSelectStudent = async (studentId: string) => {
+    setIsSwitching(true);
     setIsOpen(false);
+    try {
+      await login(studentId, 'Student123!');
+    } catch (err) {
+      console.error(`Failed to switch to student account ${studentId}:`, err);
+    } finally {
+      setIsSwitching(false);
+    }
   };
 
   const filteredStudents = state.students.filter(
@@ -77,7 +98,12 @@ export const RoleSwitcher: React.FC = () => {
         aria-haspopup="listbox"
         className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg-base hover:bg-bg-surface-raised border border-border-subtle hover:border-border-focus text-xs transition-colors focus:outline-none focus:ring-1 focus:ring-accent-primary"
       >
-        {state.currentRole === 'teacher' ? (
+        {isSwitching ? (
+          <div className="flex items-center gap-1.5 text-text-muted">
+            <Loader2 size={13} className="animate-spin text-accent-primary" />
+            <span>Switching...</span>
+          </div>
+        ) : activeRole === 'teacher' ? (
           <>
             <span className="w-2 h-2 rounded-full bg-accent-primary" />
             <span className="text-text-muted hidden sm:inline">Role:</span>
@@ -142,7 +168,7 @@ export const RoleSwitcher: React.FC = () => {
               type="button"
               onClick={handleSelectTeacher}
               className={`w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition-colors ${
-                state.currentRole === 'teacher'
+                activeRole === 'teacher'
                   ? 'bg-accent-primary/15 text-text-primary border border-accent-primary/30'
                   : 'text-text-secondary hover:text-text-primary hover:bg-bg-surface-raised'
               }`}
@@ -161,7 +187,7 @@ export const RoleSwitcher: React.FC = () => {
                   <div className="text-[11px] text-text-muted">{state.teacher.email}</div>
                 </div>
               </div>
-              {state.currentRole === 'teacher' && (
+              {activeRole === 'teacher' && (
                 <Check size={14} className="text-accent-primary" />
               )}
             </button>
@@ -181,8 +207,8 @@ export const RoleSwitcher: React.FC = () => {
             ) : (
               filteredStudents.map((student) => {
                 const isSelected =
-                  state.currentRole === 'student' &&
-                  state.currentStudentId === student.id;
+                  activeRole === 'student' &&
+                  activeStudentId === student.id;
 
                 return (
                   <button

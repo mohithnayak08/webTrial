@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMyProfile } from '../../lib/useMyProfile';
-import { useAppState } from '../../lib/useAppState';
+import { useAuth } from '../../context/AuthContext';
 import { ProfileHeader } from '../teacher/detail/ProfileHeader';
 import { StatRow } from './StatRow';
 import { AttendanceHeatmap } from './AttendanceHeatmap';
@@ -24,9 +24,18 @@ export interface StudentDashboardPageProps {
 export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({
   initialTab = 'overview',
 }) => {
-  const { student, isAuthorized, error } = useMyProfile();
-  const { setRole } = useAppState();
+  const { student, isAuthorized, isLoading, error } = useMyProfile();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<StudentDashboardTab>(initialTab);
+
+  if (isLoading) {
+    return (
+      <div className="bg-bg-surface border border-border-subtle rounded-xl p-12 text-center space-y-4 max-w-lg mx-auto mt-8">
+        <div className="w-8 h-8 border-2 border-accent-primary/20 border-t-accent-primary rounded-full animate-spin mx-auto" />
+        <p className="text-xs font-mono text-text-muted">Loading student performance telemetry...</p>
+      </div>
+    );
+  }
 
   // Hard Boundary Check (§3.4)
   if (!isAuthorized || !student) {
@@ -40,15 +49,15 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({
             Student Access Boundary Guard
           </h2>
           <p className="text-xs text-text-muted leading-relaxed">
-            {error || 'No active student session found. Select a student identity via the Topbar role switcher.'}
+            {error || 'No active student session found. Please sign in with your student account.'}
           </p>
         </div>
         <button
           type="button"
-          onClick={() => setRole('teacher', null)}
+          onClick={() => logout()}
           className="px-4 py-2 rounded-lg bg-accent-primary hover:bg-accent-primary-hover text-white text-xs font-medium inline-flex items-center gap-2 transition-colors"
         >
-          <span>Switch to Teacher Console</span>
+          <span>Sign In as Another User</span>
         </button>
       </div>
     );

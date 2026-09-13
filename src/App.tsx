@@ -28,7 +28,7 @@ const MainRouter: React.FC<MainViewProps> = ({ activeView, setActiveView }) => {
     return null;
   });
 
-  const isTeacher = user?.role === 'teacher' || state.currentRole === 'teacher';
+  const isTeacher = user ? user.role === 'teacher' : state.currentRole === 'teacher';
 
   /* =========================================
      1. TEACHER ROUTES (§2.2)

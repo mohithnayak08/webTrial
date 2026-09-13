@@ -1,4 +1,5 @@
 import { useAppState } from './useAppState';
+import { useAuth } from '../context/AuthContext';
 import { Student, Grade, AttendanceRecord } from '../types';
 import { recalculateStudent } from './derived';
 import {
@@ -23,7 +24,8 @@ export interface UseTeacherActionsResult {
  */
 export function useTeacherActions(): UseTeacherActionsResult {
   const { state, setStudents } = useAppState();
-  const isAuthorized = state.currentRole === 'teacher';
+  const { user } = useAuth();
+  const isAuthorized = user ? user.role === 'teacher' : state.currentRole === 'teacher';
 
   const addStudent = (newStudent: Student): boolean => {
     if (!isAuthorized) {
