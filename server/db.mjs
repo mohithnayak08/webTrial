@@ -10,8 +10,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DEFAULT_URI = 'mongodb+srv://nn25cce031_db_user:dcag0O9upR0D6SZU@cluster0.5f2dtwa.mongodb.net/student_data_manager?retryWrites=true&w=majority';
-const uri = process.env.MONGODB_URI || DEFAULT_URI;
+const uri = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME || 'student_data_manager';
 
 let client = null;
@@ -20,6 +19,14 @@ let isConnected = false;
 let connectionError = null;
 
 export async function connectToDatabase() {
+  if (!uri) {
+    const msg = 'MONGODB_URI is not configured.';
+    console.error(`[MongoDB Error] ${msg}`);
+    connectionError = msg;
+    isConnected = false;
+    return null;
+  }
+
   if (uri.includes('<db_username>')) {
     const msg = 'MONGODB_URI contains placeholder <db_username>. Please update your .env file with your Atlas username.';
     console.warn(`[MongoDB Warning] ${msg}`);
@@ -108,6 +115,16 @@ async function autoSeedUsersIfEmpty() {
     await usersCol.createIndex({ email: 1 }, { unique: true });
     await usersCol.createIndex({ studentRef: 1 });
 
+    // Migrate legacy records that may have stored a plaintext password.
+    const legacyUsers = await usersCol.find({ password: { $type: 'string' } }).toArray();
+    for (const legacyUser of legacyUsers) {
+      const passwordHash = await bcrypt.hash(legacyUser.password, 12);
+      await usersCol.updateOne(
+        { _id: legacyUser._id },
+        { $set: { passwordHash }, $unset: { password: '' } },
+      );
+    }
+
     const meta = await metaCol.findOne({ key: 'users_seeded' });
     if (meta) {
       const userCount = await usersCol.countDocuments();
@@ -118,7 +135,7 @@ async function autoSeedUsersIfEmpty() {
     console.log('[MongoDB Auth] Hashing credentials and seeding initial user accounts...');
 
     // 1. Seed Teacher account (Dr. Eleanor Vance)
-    const teacherPasswordHash = await bcrypt.hash('Teacher123!', 10);
+      const teacherPasswordHash = await bcrypt.hash('Teacher123!', 12);
     const teacherUser = {
       id: 'USR-TCH-01',
       email: 'e.vance@school.edu',
@@ -139,7 +156,7 @@ async function autoSeedUsersIfEmpty() {
     const studentsCol = db.collection('students');
     const allStudents = await studentsCol.find({}, { projection: { id: 1, name: 1, email: 1 } }).toArray();
 
-    const studentPasswordHash = await bcrypt.hash('Student123!', 10);
+      const studentPasswordHash = await bcrypt.hash('Student123!', 12);
 
     for (const student of allStudents) {
       const studentUser = {

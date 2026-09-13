@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useAppState } from './useAppState';
 import { useAuth } from '../context/AuthContext';
 import { getStudentMeApi } from './api';
 import { Student } from '../types';
@@ -17,14 +16,12 @@ export interface UseMyProfileResult {
  * Never trusts client-supplied query parameters.
  */
 export function useMyProfile(): UseMyProfileResult {
-  const { state } = useAppState();
   const { user, isAuthenticated } = useAuth();
   const [profile, setProfile] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const activeRole = user?.role || state.currentRole;
-  const activeStudentId = user?.studentId || state.currentStudentId;
+  const activeRole = user?.role;
 
   useEffect(() => {
     if (activeRole !== 'student') {
@@ -48,30 +45,21 @@ export function useMyProfile(): UseMyProfileResult {
         })
         .catch((err) => {
           if (isMounted) {
-            // Fallback to local state if offline
-            const localStudent = state.students.find((s) => s.id === activeStudentId) || null;
-            if (localStudent) {
-              setProfile(localStudent);
-            } else {
-              setError(err.message || 'Failed to retrieve student profile');
-            }
+            setProfile(null);
+            setError(err.message || 'Failed to retrieve student profile');
             setIsLoading(false);
           }
         });
     } else {
-      // 2. Fallback to state store
-      const local = state.students.find((s) => s.id === activeStudentId) || null;
-      setProfile(local);
+      setProfile(null);
       setIsLoading(false);
-      if (!local) {
-        setError(`NOT_FOUND: No profile found for student ${activeStudentId}`);
-      }
+      setError('AUTH_REQUIRED: Sign in with a student account to view this profile.');
     }
 
     return () => {
       isMounted = false;
     };
-  }, [activeRole, activeStudentId, isAuthenticated, user, state.students]);
+  }, [activeRole, isAuthenticated, user]);
 
   if (activeRole !== 'student') {
     return {

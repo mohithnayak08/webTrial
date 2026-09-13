@@ -8,7 +8,6 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  GraduationCap,
   ArrowRight,
   Database,
 } from 'lucide-react';
@@ -32,19 +31,6 @@ export const LoginPage: React.FC = () => {
     setErrorMessage(null);
 
     const res = await login(identifier.trim(), password);
-    if (!res.success) {
-      setErrorMessage(res.error || 'Authentication failed');
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleQuickLogin = async (demoId: string, demoPass: string) => {
-    setIdentifier(demoId);
-    setPassword(demoPass);
-    setIsSubmitting(true);
-    setErrorMessage(null);
-
-    const res = await login(demoId, demoPass);
     if (!res.success) {
       setErrorMessage(res.error || 'Authentication failed');
       setIsSubmitting(false);
@@ -132,9 +118,6 @@ export const LoginPage: React.FC = () => {
                 >
                   Password
                 </label>
-                <span className="text-[10px] font-mono text-text-muted">
-                  Faculty: <strong className="text-text-secondary">Teacher123!</strong> | Student: <strong className="text-text-secondary">Student123!</strong>
-                </span>
               </div>
               <div className="relative">
                 <KeyRound size={15} className="absolute left-3 top-2.5 text-text-muted" />
@@ -177,135 +160,6 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick Demo Credentials Panel */}
-          <div className="pt-4 border-t border-border-subtle space-y-3">
-            <div className="flex items-center justify-between text-[10px] uppercase font-mono text-text-muted tracking-wider">
-              <span>Quick Demo Sign-In</span>
-              <span className="text-accent-primary">1-Click Access</span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2">
-              {/* Teacher One-Click */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('e.vance@school.edu', 'Teacher123!')}
-                disabled={isSubmitting}
-                className="text-left p-2.5 rounded-xl bg-bg-base hover:bg-bg-surface-raised border border-border-subtle hover:border-accent-primary/50 transition-colors flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-accent-primary/15 text-accent-primary flex items-center justify-center text-xs">
-                    <Shield size={14} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-text-primary group-hover:text-accent-primary transition-colors flex items-center gap-1.5">
-                      <span>Faculty: Dr. Eleanor Vance</span>
-                      <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-accent-primary/10 text-accent-primary">
-                        CRUD
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-mono text-text-muted">
-                      e.vance@school.edu • Teacher123!
-                    </div>
-                  </div>
-                </div>
-                <ArrowRight size={13} className="text-text-muted group-hover:text-accent-primary group-hover:translate-x-0.5 transition-all" />
-              </button>
-
-              {/* Top Student One-Click */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('STU-1001', 'Student123!')}
-                disabled={isSubmitting}
-                className="text-left p-2.5 rounded-xl bg-bg-base hover:bg-bg-surface-raised border border-border-subtle hover:border-emerald-500/50 transition-colors flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs">
-                    <GraduationCap size={14} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-text-primary group-hover:text-emerald-400 transition-colors flex items-center gap-1.5">
-                      <span>Student: Aisha Khan</span>
-                      <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400">
-                        Top Rank
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-mono text-text-muted">
-                      STU-1001 • Student123!
-                    </div>
-                  </div>
-                </div>
-                <ArrowRight size={13} className="text-text-muted group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
-              </button>
-
-              {/* At-Risk Student One-Click */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('STU-1010', 'Student123!')}
-                disabled={isSubmitting}
-                className="text-left p-2.5 rounded-xl bg-bg-base hover:bg-bg-surface-raised border border-border-subtle hover:border-amber-500/50 transition-colors flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center text-xs">
-                    <GraduationCap size={14} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-text-primary group-hover:text-amber-400 transition-colors flex items-center gap-1.5">
-                      <span>Student: Marcus Bennett</span>
-                      <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-500/10 text-amber-400">
-                        At-Risk
-                      </span>
-                    </div>
-                    <div className="text-[10px] font-mono text-text-muted">
-                      STU-1010 • Student123!
-                    </div>
-                  </div>
-                </div>
-                <ArrowRight size={13} className="text-text-muted group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
-              </button>
-            </div>
-
-            {/* Expandable All Accounts Dropdown */}
-            <details className="group border border-border-subtle rounded-xl overflow-hidden bg-bg-base transition-colors">
-              <summary className="p-2.5 text-xs text-text-secondary hover:text-text-primary cursor-pointer flex items-center justify-between select-none list-none">
-                <span className="font-mono text-[11px]">View All 13 Enrolled Accounts (1 Faculty + 12 Students)</span>
-                <span className="text-text-muted text-[10px] group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div className="p-2 border-t border-border-subtle space-y-1 max-h-56 overflow-y-auto">
-                {[
-                  { id: 'e.vance@school.edu', name: 'Dr. Eleanor Vance', role: 'Faculty', pass: 'Teacher123!', note: 'CRUD' },
-                  { id: 'STU-1001', name: 'Aisha Khan', role: 'Student', pass: 'Student123!', note: 'Top Rank' },
-                  { id: 'STU-1002', name: 'Rohan Mehta', role: 'Student', pass: 'Student123!', note: 'Good' },
-                  { id: 'STU-1003', name: 'Liam O\'Connor', role: 'Student', pass: 'Student123!', note: 'Good' },
-                  { id: 'STU-1004', name: 'Maya Lin', role: 'Student', pass: 'Student123!', note: 'Good' },
-                  { id: 'STU-1005', name: 'Carlos Rivera', role: 'Student', pass: 'Student123!', note: 'Good' },
-                  { id: 'STU-1006', name: 'Priya Sharma', role: 'Student', pass: 'Student123!', note: 'Warning' },
-                  { id: 'STU-1007', name: 'David Kim', role: 'Student', pass: 'Student123!', note: 'Warning' },
-                  { id: 'STU-1008', name: 'Zoe Washington', role: 'Student', pass: 'Student123!', note: 'Warning' },
-                  { id: 'STU-1009', name: 'Ethan Patel', role: 'Student', pass: 'Student123!', note: 'Warning' },
-                  { id: 'STU-1010', name: 'Marcus Bennett', role: 'Student', pass: 'Student123!', note: 'At-Risk' },
-                  { id: 'STU-1011', name: 'Sophia Chen', role: 'Student', pass: 'Student123!', note: 'At-Risk' },
-                  { id: 'STU-1012', name: 'Tariq Al-Mansoor', role: 'Student', pass: 'Student123!', note: 'At-Risk' },
-                ].map((account) => (
-                  <button
-                    key={account.id}
-                    type="button"
-                    onClick={() => handleQuickLogin(account.id, account.pass)}
-                    disabled={isSubmitting}
-                    className="w-full text-left p-1.5 rounded-lg hover:bg-bg-surface flex items-center justify-between text-xs transition-colors group/item"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] text-accent-primary">{account.id}</span>
-                      <span className="text-text-primary text-[11px] group-hover/item:text-accent-primary transition-colors">{account.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-text-muted">
-                      <span>{account.pass}</span>
-                      <span className="text-[9px] px-1 py-0.5 rounded bg-bg-surface-raised border border-border-subtle">{account.note}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </details>
-          </div>
         </div>
 
         {/* Security Notice */}

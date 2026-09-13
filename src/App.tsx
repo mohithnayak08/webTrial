@@ -101,6 +101,10 @@ const AppRoot: React.FC = () => {
   useEffect(() => {
     if (user) {
       setRole(user.role, user.studentId || null);
+      const dashboardPath = user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard';
+      if (window.location.pathname === '/' || window.location.pathname === '/login') {
+        window.history.replaceState({}, '', dashboardPath);
+      }
     }
   }, [user, setRole]);
 
@@ -114,6 +118,9 @@ const AppRoot: React.FC = () => {
   }
 
   if (!isAuthenticated) {
+    if (window.location.pathname !== '/login') {
+      window.history.replaceState({}, '', '/login');
+    }
     return <LoginPage />;
   }
 

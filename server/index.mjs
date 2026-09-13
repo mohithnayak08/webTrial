@@ -57,7 +57,7 @@ async function findUserByIdentifier(usersCol, rawIdentifier) {
       { id: upper },
       { id: trimmed },
     ],
-  });
+  }, { projection: { _id: 0, id: 1, email: 1, name: 1, role: 1, studentRef: 1, passwordHash: 1 } });
   if (user) return user;
 
   // 2. Normalized student ID: e.g. "STU1001", "stu1001", or "1001" -> "STU-1001"
@@ -69,29 +69,7 @@ async function findUserByIdentifier(usersCol, rawIdentifier) {
         { studentRef: formattedId },
         { id: `USR-${formattedId}` },
       ],
-    });
-    if (user) return user;
-  }
-
-  // 3. Email username prefix: e.g. "e.vance" or "aisha.khan"
-  if (!trimmed.includes('@')) {
-    user = await usersCol.findOne({
-      email: { $regex: new RegExp(`^${escapeRegex(lower)}@`, 'i') },
-    });
-    if (user) return user;
-  }
-
-  // 4. Full Name or Partial Name (e.g. "Aisha Khan", "Dr. Eleanor Vance", "Eleanor Vance")
-  const cleanName = trimmed.replace(/^(dr\.|dr|mr\.|mrs\.|ms\.)\s*/i, '').trim();
-  user = await usersCol.findOne({
-    name: { $regex: new RegExp(`^${escapeRegex(cleanName)}$`, 'i') },
-  });
-  if (user) return user;
-
-  if (cleanName.length >= 3) {
-    user = await usersCol.findOne({
-      name: { $regex: new RegExp(escapeRegex(cleanName), 'i') },
-    });
+    }, { projection: { _id: 0, id: 1, email: 1, name: 1, role: 1, studentRef: 1, passwordHash: 1 } });
     if (user) return user;
   }
 
@@ -116,7 +94,7 @@ app.get('/api/health', async (req, res) => {
 /**
  * POST /api/auth/login
  * Body: { identifier, password }
- * Supports email, Student ID (STU-1001 / STU1001 / 1001), username (e.vance), or full name (Aisha Khan)
+ * Supports email or Student ID.
  */
 app.post('/api/auth/login', async (req, res) => {
   const usersCol = getUsersCollection();
@@ -127,46 +105,20 @@ app.post('/api/auth/login', async (req, res) => {
   const { identifier, password } = req.body || {};
 
   if (!identifier || !password) {
-    return res.status(400).json({
-      error: 'Identifier (email or Student ID) and password are required.',
-    });
+    return res.status(401).json({ error: 'Invalid credentials.' });
   }
 
   try {
     const user = await findUserByIdentifier(usersCol, identifier);
 
     if (!user) {
-      return res.status(401).json({
-        error: `User "${identifier}" not found. Try institutional email (e.g. e.vance@school.edu), Student ID (e.g. STU-1001), or student/faculty name.`,
-      });
+      return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
-    let isMatch = false;
-    if (user.passwordHash) {
-      isMatch = await bcrypt.compare(password, user.passwordHash);
-    }
-
-    // Friendly demo/dev fallbacks for ease of evaluation
-    if (!isMatch) {
-      const cleanPass = password.trim();
-      if (user.role === 'teacher') {
-        const teacherValid = ['teacher123!', 'teacher123', 'teacher', 'admin', 'password'];
-        if (teacherValid.includes(cleanPass.toLowerCase()) || cleanPass === 'Teacher123!') {
-          isMatch = true;
-        }
-      } else {
-        const studentValid = ['student123!', 'student123', 'student', 'password', 'demo', '123456'];
-        if (studentValid.includes(cleanPass.toLowerCase()) || cleanPass === 'Student123!') {
-          isMatch = true;
-        }
-      }
-    }
+    const isMatch = Boolean(user.passwordHash) && await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
-      const defaultPass = user.role === 'teacher' ? 'Teacher123!' : 'Student123!';
-      return res.status(401).json({
-        error: `Incorrect password for ${user.name}. Default password is "${defaultPass}".`,
-      });
+      return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
     // Sign session JWT
@@ -184,7 +136,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });
@@ -213,7 +165,7 @@ app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('auth_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
   });
   res.json({ success: true, message: 'Successfully signed out.' });
@@ -434,7 +386,7 @@ app.post('/api/students/import', requireAuth, requireRole('teacher'), async (req
 
     // Ensure student accounts exist for newly imported students
     if (usersCol) {
-      const defaultPasswordHash = await bcrypt.hash('Student123!', 10);
+      const defaultPasswordHash = await bcrypt.hash('Student123!', 12);
       for (const s of incomingStudents) {
         await usersCol.updateOne(
           { studentRef: s.id },
