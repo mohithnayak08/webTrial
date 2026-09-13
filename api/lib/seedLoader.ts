@@ -14,13 +14,13 @@ export function getInitialSeedData(): any[] {
     path.resolve(__dirname, '..', '..', 'server', 'seedData.json'),
   ];
 
-  for (const p of candidatePaths) {
-    if (fs.existsSync(p)) {
+  for (const candidatePath of candidatePaths) {
+    if (fs.existsSync(candidatePath)) {
       try {
-        const raw = fs.readFileSync(p, 'utf-8');
+        const raw = fs.readFileSync(candidatePath, 'utf-8');
         return JSON.parse(raw);
       } catch (err) {
-        console.warn(`[SeedData] Failed to parse ${p}:`, err);
+        console.warn(`[SeedData] Failed to parse ${candidatePath}:`, err);
       }
     }
   }

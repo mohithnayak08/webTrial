@@ -6,7 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { User } from '../models/User';
 import { Student } from '../models/Student';
-import { getInitialSeedData } from './seedData';
+import { getInitialSeedData } from './seedLoader';
 
 dotenv.config();
 

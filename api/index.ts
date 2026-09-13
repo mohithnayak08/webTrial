@@ -12,7 +12,7 @@ import { User, IUser } from './models/User';
 import { Student } from './models/Student';
 import { requireAuth, requireRole, AuthenticatedRequest } from './middleware/auth';
 import { setAuthCookie, clearAuthCookie } from './lib/cookie';
-import { getInitialSeedData } from './lib/seedData';
+import { getInitialSeedData } from './lib/seedLoader';
 
 dotenv.config();
 
