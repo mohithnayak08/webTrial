@@ -22,7 +22,7 @@ export interface UseTeacherActionsResult {
  * Returns operational functions if role === 'teacher', otherwise rejects with hard boundary block.
  */
 export function useTeacherActions(): UseTeacherActionsResult {
-  const { state, isDbConnected, setStudents } = useAppState();
+  const { state, setStudents } = useAppState();
   const isAuthorized = state.currentRole === 'teacher';
 
   const addStudent = (newStudent: Student): boolean => {
@@ -33,11 +33,9 @@ export function useTeacherActions(): UseTeacherActionsResult {
     const computed = recalculateStudent(newStudent);
     setStudents((prev) => [computed, ...prev]);
 
-    if (isDbConnected) {
-      createStudentInDb(computed).catch((err) => {
-        console.error('[MongoDB Atlas Error] Failed to insert student:', err);
-      });
-    }
+    createStudentInDb(computed).catch((err) => {
+      console.error('[MongoDB Atlas Error] Failed to insert student:', err);
+    });
     return true;
   };
 
@@ -56,7 +54,7 @@ export function useTeacherActions(): UseTeacherActionsResult {
       }),
     );
 
-    if (isDbConnected && updatedMerged) {
+    if (updatedMerged) {
       updateStudentInDb(id, updatedMerged).catch((err) => {
         console.error('[MongoDB Atlas Error] Failed to update student:', err);
       });
@@ -71,11 +69,9 @@ export function useTeacherActions(): UseTeacherActionsResult {
     }
     setStudents((prev) => prev.filter((s) => s.id !== id));
 
-    if (isDbConnected) {
-      deleteStudentFromDb(id).catch((err) => {
-        console.error('[MongoDB Atlas Error] Failed to delete student:', err);
-      });
-    }
+    deleteStudentFromDb(id).catch((err) => {
+      console.error('[MongoDB Atlas Error] Failed to delete student:', err);
+    });
     return true;
   };
 
@@ -117,7 +113,7 @@ export function useTeacherActions(): UseTeacherActionsResult {
       return Array.from(studentMap.values());
     });
 
-    if (isDbConnected && incoming.length > 0) {
+    if (incoming.length > 0) {
       importSpreadsheetStudentsToDb(incoming).catch((err) => {
         console.error('[MongoDB Atlas Error] Failed to bulk upsert students:', err);
       });

@@ -57,21 +57,39 @@ async function autoSeedIfEmpty() {
   if (!db) return;
   try {
     const studentsCol = db.collection('students');
+    const metaCol = db.collection('system_meta');
     await studentsCol.createIndex({ id: 1 }, { unique: true });
 
-    const count = await studentsCol.countDocuments();
-    if (count === 0) {
-      const seedFilePath = path.join(__dirname, 'seedData.json');
-      if (fs.existsSync(seedFilePath)) {
-        const raw = fs.readFileSync(seedFilePath, 'utf-8');
-        const seedData = JSON.parse(raw);
-        if (Array.isArray(seedData) && seedData.length > 0) {
-          await studentsCol.insertMany(seedData);
-          console.log(`[MongoDB] Seeded collection "students" with ${seedData.length} records.`);
+    const meta = await metaCol.findOne({ key: 'is_seeded' });
+    if (!meta) {
+      const count = await studentsCol.countDocuments();
+      if (count > 0) {
+        await metaCol.insertOne({
+          key: 'is_seeded',
+          value: true,
+          seededAt: new Date().toISOString(),
+        });
+        console.log(`[MongoDB] Database already contains ${count} records. Marked as initialized.`);
+      } else {
+        // First-time installation: seed default 12 students
+        const seedFilePath = path.join(__dirname, 'seedData.json');
+        if (fs.existsSync(seedFilePath)) {
+          const raw = fs.readFileSync(seedFilePath, 'utf-8');
+          const seedData = JSON.parse(raw);
+          if (Array.isArray(seedData) && seedData.length > 0) {
+            await studentsCol.insertMany(seedData);
+            await metaCol.insertOne({
+              key: 'is_seeded',
+              value: true,
+              seededAt: new Date().toISOString(),
+            });
+            console.log(`[MongoDB] Initial seed of collection "students" with ${seedData.length} records.`);
+          }
         }
       }
     } else {
-      console.log(`[MongoDB] Database already initialized with ${count} student records.`);
+      const count = await studentsCol.countDocuments();
+      console.log(`[MongoDB] Database initialized (${count} student records present).`);
     }
   } catch (err) {
     console.error('[MongoDB Seeding Error]:', err.message);

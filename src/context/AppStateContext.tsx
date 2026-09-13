@@ -43,7 +43,7 @@ function loadPersistedState(): AppState {
     const parsed = raw ? (JSON.parse(raw) as Partial<AppState>) : null;
 
     const baseStudents =
-      parsed && Array.isArray(parsed.students) && parsed.students.length > 0
+      parsed && Array.isArray(parsed.students)
         ? parsed.students
         : initialAppState.students;
 
@@ -109,7 +109,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       if (health.isConnected) {
         setIsDbConnected(true);
         const dbStudents = await fetchStudentsFromDb();
-        if (Array.isArray(dbStudents) && dbStudents.length > 0) {
+        if (Array.isArray(dbStudents)) {
           setState((prev) => ({
             ...prev,
             students: dbStudents,
