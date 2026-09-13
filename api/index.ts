@@ -12,6 +12,7 @@ import { User, IUser } from './models/User';
 import { Student } from './models/Student';
 import { requireAuth, requireRole, AuthenticatedRequest } from './middleware/auth';
 import { setAuthCookie, clearAuthCookie } from './lib/cookie';
+import { getInitialSeedData } from './lib/seedData';
 
 dotenv.config();
 
@@ -363,18 +364,7 @@ app.post('/api/students/import', requireAuth, requireRole('teacher'), async (req
 // Reset Collection to Initial Seed Dataset - Teacher Only
 app.post('/api/reset', requireAuth, requireRole('teacher'), async (_req: Request, res: Response) => {
   try {
-    const seedPaths = [
-      path.resolve(process.cwd(), 'server', 'seedData.json'),
-      path.resolve(__dirname, '..', 'server', 'seedData.json'),
-    ];
-    let seedData: any[] = [];
-    for (const p of seedPaths) {
-      if (fs.existsSync(p)) {
-        const raw = fs.readFileSync(p, 'utf-8');
-        seedData = JSON.parse(raw);
-        break;
-      }
-    }
+    const seedData = getInitialSeedData();
 
     if (seedData.length === 0) {
       return res.status(500).json({ error: 'seedData.json not found' });

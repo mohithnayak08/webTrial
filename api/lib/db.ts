@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { User } from '../models/User';
 import { Student } from '../models/Student';
+import { getInitialSeedData } from './seedData';
 
 dotenv.config();
 
@@ -80,19 +81,7 @@ export async function autoSeedIfEmpty() {
     const studentCount = await Student.countDocuments();
     if (studentCount === 0) {
       console.log('[Mongoose Seeding] Populating students collection with initial data...');
-      const seedPaths = [
-        path.resolve(process.cwd(), 'server', 'seedData.json'),
-        path.resolve(__dirname, '..', '..', 'server', 'seedData.json'),
-      ];
-
-      let seedData: any[] = [];
-      for (const p of seedPaths) {
-        if (fs.existsSync(p)) {
-          const raw = fs.readFileSync(p, 'utf-8');
-          seedData = JSON.parse(raw);
-          break;
-        }
-      }
+      const seedData = getInitialSeedData();
 
       if (seedData.length > 0) {
         await Student.insertMany(seedData);
