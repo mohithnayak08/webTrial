@@ -1,7 +1,9 @@
-import React from 'react';
-import { AppShell } from './components/layout/AppShell';
+import React, { useEffect, useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
 import { ToastProvider } from './context/ToastContext';
+import { AppShell } from './components/layout/AppShell';
+import { LoginPage } from './components/auth/LoginPage';
 import { TeacherDashboardPage } from './components/teacher/TeacherDashboardPage';
 import { StudentRosterPage } from './components/teacher/StudentRosterPage';
 import { StudentDetailPage } from './components/teacher/StudentDetailPage';
@@ -17,15 +19,16 @@ interface MainViewProps {
 
 const MainRouter: React.FC<MainViewProps> = ({ activeView, setActiveView }) => {
   const { state } = useAppState();
+  const { user } = useAuth();
 
-  const [selectedStudentId, setSelectedStudentId] = React.useState<string | null>(() => {
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('studentId');
     }
     return null;
   });
 
-  const isTeacher = state.currentRole === 'teacher';
+  const isTeacher = user?.role === 'teacher' || state.currentRole === 'teacher';
 
   /* =========================================
      1. TEACHER ROUTES (§2.2)
@@ -80,25 +83,58 @@ const MainRouter: React.FC<MainViewProps> = ({ activeView, setActiveView }) => {
       ? 'feedback'
       : 'overview';
 
+  const resolvedStudentId = user?.studentId || state.currentStudentId || '';
+
   return (
     <StudentDashboardPage
-      key={`${state.currentStudentId}-${studentTab}`}
+      key={`${resolvedStudentId}-${studentTab}`}
       initialTab={studentTab}
     />
   );
 };
 
+const AppRoot: React.FC = () => {
+  const { user, isAuthenticated, isLoadingAuth } = useAuth();
+  const { setRole } = useAppState();
+
+  // Sync authenticated session role and student reference into AppState
+  useEffect(() => {
+    if (user) {
+      setRole(user.role, user.studentId || null);
+    }
+  }, [user, setRole]);
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center p-6 text-text-primary">
+        <div className="w-9 h-9 border-2 border-accent-primary/20 border-t-accent-primary rounded-full animate-spin mb-4" />
+        <p className="text-xs font-mono text-text-muted">Authenticating active session...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  return (
+    <AppShell>
+      {({ activeView, setActiveView }) => (
+        <MainRouter activeView={activeView} setActiveView={setActiveView} />
+      )}
+    </AppShell>
+  );
+};
+
 export const App: React.FC = () => {
   return (
-    <AppStateProvider>
-      <ToastProvider>
-        <AppShell>
-          {({ activeView, setActiveView }) => (
-            <MainRouter activeView={activeView} setActiveView={setActiveView} />
-          )}
-        </AppShell>
-      </ToastProvider>
-    </AppStateProvider>
+    <AuthProvider>
+      <AppStateProvider>
+        <ToastProvider>
+          <AppRoot />
+        </ToastProvider>
+      </AppStateProvider>
+    </AuthProvider>
   );
 };
 

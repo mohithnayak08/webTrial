@@ -1,6 +1,7 @@
 import React from 'react';
-import { Menu, X, Shield, Database } from 'lucide-react';
+import { Menu, X, Shield, Database, Lock } from 'lucide-react';
 import { useAppState } from '../../lib/useAppState';
+import { useAuth } from '../../context/AuthContext';
 import { RoleSwitcher } from './RoleSwitcher';
 import { UserChip } from './UserChip';
 
@@ -14,6 +15,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   isMobileSidebarOpen,
 }) => {
   const { isDbConnected, isLoadingDb } = useAppState();
+  const { user } = useAuth();
 
   return (
     <header className="h-14 w-full bg-bg-surface border-b border-border-subtle sticky top-0 z-30 flex items-center justify-between px-4 lg:px-6">
@@ -56,9 +58,16 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
       </div>
 
-      {/* Center/Right: Functional RoleSwitcher + UserChip */}
+      {/* Center/Right: Session Controls & User Profile */}
       <div className="flex items-center gap-3">
-        <RoleSwitcher />
+        {user?.role === 'teacher' ? (
+          <RoleSwitcher />
+        ) : (
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg-base border border-border-subtle text-[11px] font-mono text-emerald-400">
+            <Lock size={12} className="text-emerald-400" />
+            <span>Vault: {user?.studentId}</span>
+          </div>
+        )}
         <UserChip />
       </div>
     </header>
