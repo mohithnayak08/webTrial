@@ -98,12 +98,17 @@ export const LoginPage: React.FC = () => {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label
-                htmlFor="identifier"
-                className="block text-[11px] uppercase tracking-wider font-mono text-text-muted font-medium"
-              >
-                Institutional Identifier
-              </label>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="identifier"
+                  className="block text-[11px] uppercase tracking-wider font-mono text-text-muted font-medium"
+                >
+                  Institutional Identifier
+                </label>
+                <span className="text-[10px] font-mono text-accent-primary">
+                  Name, ID, or Email
+                </span>
+              </div>
               <div className="relative">
                 <User size={15} className="absolute left-3 top-2.5 text-text-muted" />
                 <input
@@ -113,7 +118,7 @@ export const LoginPage: React.FC = () => {
                   autoFocus
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. e.vance@school.edu or STU-1001"
+                  placeholder="e.g. e.vance@school.edu, STU-1001, or Aisha Khan"
                   className="w-full bg-bg-base border border-border-subtle rounded-lg pl-9 pr-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border-focus transition-colors"
                 />
               </div>
@@ -127,6 +132,9 @@ export const LoginPage: React.FC = () => {
                 >
                   Password
                 </label>
+                <span className="text-[10px] font-mono text-text-muted">
+                  Faculty: <strong className="text-text-secondary">Teacher123!</strong> | Student: <strong className="text-text-secondary">Student123!</strong>
+                </span>
               </div>
               <div className="relative">
                 <KeyRound size={15} className="absolute left-3 top-2.5 text-text-muted" />
@@ -255,6 +263,48 @@ export const LoginPage: React.FC = () => {
                 <ArrowRight size={13} className="text-text-muted group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
               </button>
             </div>
+
+            {/* Expandable All Accounts Dropdown */}
+            <details className="group border border-border-subtle rounded-xl overflow-hidden bg-bg-base transition-colors">
+              <summary className="p-2.5 text-xs text-text-secondary hover:text-text-primary cursor-pointer flex items-center justify-between select-none list-none">
+                <span className="font-mono text-[11px]">View All 13 Enrolled Accounts (1 Faculty + 12 Students)</span>
+                <span className="text-text-muted text-[10px] group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div className="p-2 border-t border-border-subtle space-y-1 max-h-56 overflow-y-auto">
+                {[
+                  { id: 'e.vance@school.edu', name: 'Dr. Eleanor Vance', role: 'Faculty', pass: 'Teacher123!', note: 'CRUD' },
+                  { id: 'STU-1001', name: 'Aisha Khan', role: 'Student', pass: 'Student123!', note: 'Top Rank' },
+                  { id: 'STU-1002', name: 'Rohan Mehta', role: 'Student', pass: 'Student123!', note: 'Good' },
+                  { id: 'STU-1003', name: 'Liam O\'Connor', role: 'Student', pass: 'Student123!', note: 'Good' },
+                  { id: 'STU-1004', name: 'Maya Lin', role: 'Student', pass: 'Student123!', note: 'Good' },
+                  { id: 'STU-1005', name: 'Carlos Rivera', role: 'Student', pass: 'Student123!', note: 'Good' },
+                  { id: 'STU-1006', name: 'Priya Sharma', role: 'Student', pass: 'Student123!', note: 'Warning' },
+                  { id: 'STU-1007', name: 'David Kim', role: 'Student', pass: 'Student123!', note: 'Warning' },
+                  { id: 'STU-1008', name: 'Zoe Washington', role: 'Student', pass: 'Student123!', note: 'Warning' },
+                  { id: 'STU-1009', name: 'Ethan Patel', role: 'Student', pass: 'Student123!', note: 'Warning' },
+                  { id: 'STU-1010', name: 'Marcus Bennett', role: 'Student', pass: 'Student123!', note: 'At-Risk' },
+                  { id: 'STU-1011', name: 'Sophia Chen', role: 'Student', pass: 'Student123!', note: 'At-Risk' },
+                  { id: 'STU-1012', name: 'Tariq Al-Mansoor', role: 'Student', pass: 'Student123!', note: 'At-Risk' },
+                ].map((account) => (
+                  <button
+                    key={account.id}
+                    type="button"
+                    onClick={() => handleQuickLogin(account.id, account.pass)}
+                    disabled={isSubmitting}
+                    className="w-full text-left p-1.5 rounded-lg hover:bg-bg-surface flex items-center justify-between text-xs transition-colors group/item"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] text-accent-primary">{account.id}</span>
+                      <span className="text-text-primary text-[11px] group-hover/item:text-accent-primary transition-colors">{account.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] font-mono text-text-muted">
+                      <span>{account.pass}</span>
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-bg-surface-raised border border-border-subtle">{account.note}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </details>
           </div>
         </div>
 

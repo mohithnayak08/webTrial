@@ -126,10 +126,12 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // Fetch initial student data from MongoDB Atlas on mount
+  // Fetch student data from MongoDB Atlas when authenticated as teacher
   useEffect(() => {
-    refreshFromDb();
-  }, [refreshFromDb]);
+    if (state.currentRole === 'teacher') {
+      refreshFromDb();
+    }
+  }, [refreshFromDb, state.currentRole]);
 
   // Automatically synchronize state changes to localStorage as local cache
   useEffect(() => {
@@ -144,9 +146,12 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
     setState((prev) => ({
       ...prev,
       currentRole: role,
-      currentStudentId: role === 'student' ? studentId || prev.students[0]?.id || null : null,
+      currentStudentId: studentId,
     }));
-  }, []);
+    if (role === 'teacher') {
+      refreshFromDb();
+    }
+  }, [refreshFromDb]);
 
   const setStudents = useCallback(
     (updater: Student[] | ((prev: Student[]) => Student[])) => {

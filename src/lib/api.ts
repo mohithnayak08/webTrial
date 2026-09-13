@@ -30,13 +30,13 @@ export async function loginApi(
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
+    credentials: 'include',
     body: JSON.stringify({ identifier, password }),
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || 'Authentication failed');
+    const err = await res.json().catch(() => ({ error: res.statusText || 'Unable to reach backend server' }));
+    throw new Error(err.error || `Authentication failed (HTTP ${res.status})`);
   }
 
   return await res.json();
@@ -45,7 +45,7 @@ export async function loginApi(
 export async function logoutApi(): Promise<{ success: boolean }> {
   const res = await fetch(`${API_BASE}/auth/logout`, {
     method: 'POST',
-    credentials: 'same-origin',
+    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -59,7 +59,7 @@ export async function logoutApi(): Promise<{ success: boolean }> {
 export async function getAuthMeApi(): Promise<AuthUser | null> {
   try {
     const res = await fetch(`${API_BASE}/auth/me`, {
-      credentials: 'same-origin',
+      credentials: 'include',
       signal: AbortSignal.timeout(5000),
     });
 
@@ -76,7 +76,7 @@ export async function getAuthMeApi(): Promise<AuthUser | null> {
 
 export async function getStudentMeApi(): Promise<Student> {
   const res = await fetch(`${API_BASE}/student/me`, {
-    credentials: 'same-origin',
+    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -94,7 +94,7 @@ export async function getStudentMeApi(): Promise<Student> {
 export async function checkDbHealth(): Promise<DbHealthStatus> {
   try {
     const res = await fetch(`${API_BASE}/health`, {
-      credentials: 'same-origin',
+      credentials: 'include',
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) {
@@ -118,7 +118,7 @@ export async function checkDbHealth(): Promise<DbHealthStatus> {
 
 export async function fetchStudentsFromDb(): Promise<Student[]> {
   const res = await fetch(`${API_BASE}/students`, {
-    credentials: 'same-origin',
+    credentials: 'include',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -129,7 +129,7 @@ export async function fetchStudentsFromDb(): Promise<Student[]> {
 
 export async function fetchStudentByIdFromDb(id: string): Promise<Student> {
   const res = await fetch(`${API_BASE}/students/${encodeURIComponent(id)}`, {
-    credentials: 'same-origin',
+    credentials: 'include',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -142,7 +142,7 @@ export async function createStudentInDb(student: Student): Promise<Student> {
   const res = await fetch(`${API_BASE}/students`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
+    credentials: 'include',
     body: JSON.stringify(student),
   });
   if (!res.ok) {
@@ -159,7 +159,7 @@ export async function updateStudentInDb(
   const res = await fetch(`${API_BASE}/students/${encodeURIComponent(id)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
+    credentials: 'include',
     body: JSON.stringify(updates),
   });
   if (!res.ok) {
@@ -172,7 +172,7 @@ export async function updateStudentInDb(
 export async function deleteStudentFromDb(id: string): Promise<{ success: boolean; id: string }> {
   const res = await fetch(`${API_BASE}/students/${encodeURIComponent(id)}`, {
     method: 'DELETE',
-    credentials: 'same-origin',
+    credentials: 'include',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -187,7 +187,7 @@ export async function importSpreadsheetStudentsToDb(
   const res = await fetch(`${API_BASE}/students/import`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
+    credentials: 'include',
     body: JSON.stringify(students),
   });
   if (!res.ok) {
@@ -200,7 +200,7 @@ export async function importSpreadsheetStudentsToDb(
 export async function resetDatabaseInDb(): Promise<{ success: boolean; count: number }> {
   const res = await fetch(`${API_BASE}/reset`, {
     method: 'POST',
-    credentials: 'same-origin',
+    credentials: 'include',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
