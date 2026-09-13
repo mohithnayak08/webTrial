@@ -7,12 +7,12 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { connectToDatabase, getDbHealth } from './lib/db';
-import { User, IUser } from './models/User';
-import { Student } from './models/Student';
-import { requireAuth, requireRole, AuthenticatedRequest } from './middleware/auth';
-import { setAuthCookie, clearAuthCookie } from './lib/cookie';
-import { getInitialSeedData } from './lib/seedLoader';
+import { connectToDatabase, getDbHealth } from './lib/db.js';
+import { User, IUser } from './models/User.js';
+import { Student } from './models/Student.js';
+import { requireAuth, requireRole, AuthenticatedRequest } from './middleware/auth.js';
+import { setAuthCookie, clearAuthCookie } from './lib/cookie.js';
+import { getInitialSeedData } from './lib/seedLoader.js';
 
 dotenv.config();
 

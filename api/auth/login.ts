@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { connectToDatabase } from '../lib/db';
-import { User, IUser } from '../models/User';
-import { setAuthCookie } from '../lib/cookie';
+import { connectToDatabase } from '../lib/db.js';
+import { User, IUser } from '../models/User.js';
+import { setAuthCookie } from '../lib/cookie.js';
 
 dotenv.config();
 

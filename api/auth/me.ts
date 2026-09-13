@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { getAuthToken } from '../lib/cookie';
-import { AuthUserPayload } from '../middleware/auth';
+import { getAuthToken } from '../lib/cookie.js';
+import { AuthUserPayload } from '../middleware/auth.js';
 
 dotenv.config();
 

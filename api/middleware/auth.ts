@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
-import { getAuthToken } from '../lib/cookie';
+import { getAuthToken } from '../lib/cookie.js';
 
 dotenv.config();
 

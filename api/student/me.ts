@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { connectToDatabase } from '../lib/db';
-import { Student } from '../models/Student';
-import { getAuthToken } from '../lib/cookie';
-import { AuthUserPayload } from '../middleware/auth';
+import { connectToDatabase } from '../lib/db.js';
+import { Student } from '../models/Student.js';
+import { getAuthToken } from '../lib/cookie.js';
+import { AuthUserPayload } from '../middleware/auth.js';
 
 dotenv.config();
 

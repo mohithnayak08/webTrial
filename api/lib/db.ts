@@ -4,9 +4,9 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { User } from '../models/User';
-import { Student } from '../models/Student';
-import { getInitialSeedData } from './seedLoader';
+import { User } from '../models/User.js';
+import { Student } from '../models/Student.js';
+import { getInitialSeedData } from './seedLoader.js';
 
 dotenv.config();
 
