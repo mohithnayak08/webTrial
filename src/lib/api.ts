@@ -17,7 +17,12 @@ export interface AuthUser {
   name: string;
 }
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+const configuredApiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
+const API_BASE = configuredApiBase
+  ? configuredApiBase.endsWith('/api')
+    ? configuredApiBase
+    : `${configuredApiBase}/api`
+  : '/api';
 
 // ==========================================
 // 1. AUTHENTICATION CLIENT APIS
