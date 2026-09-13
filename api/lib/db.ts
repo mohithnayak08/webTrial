@@ -78,20 +78,24 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
 
 export async function autoSeedIfEmpty() {
   try {
-    const studentCount = await Student.countDocuments();
-    if (studentCount === 0) {
-      console.log('[Mongoose Seeding] Populating students collection with initial data...');
-      const seedData = getInitialSeedData();
-
-      if (seedData.length > 0) {
-        await Student.insertMany(seedData);
-        console.log(`[Mongoose Seeding] Inserted ${seedData.length} students.`);
-      }
-    }
-
     const userCount = await User.countDocuments();
+    
+    // Only auto-seed if the database is completely empty (no users).
+    // If a teacher or student user exists, the system is considered initialized,
+    // and we should NOT restore deleted students.
     if (userCount === 0) {
       console.log('[Mongoose Seeding] Generating user credentials for faculty and students...');
+
+      const studentCount = await Student.countDocuments();
+      if (studentCount === 0) {
+        console.log('[Mongoose Seeding] Populating students collection with initial data...');
+        const seedData = getInitialSeedData();
+
+        if (seedData.length > 0) {
+          await Student.insertMany(seedData);
+          console.log(`[Mongoose Seeding] Inserted ${seedData.length} students.`);
+        }
+      }
 
       // 1. Teacher account
       const teacherPasswordHash = await bcrypt.hash('Teacher123!', 12);

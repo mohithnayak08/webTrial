@@ -39,7 +39,7 @@ app.use(async (_req, _res, next) => {
     next();
   } catch (err: any) {
     console.error('[DB Connection Middleware Error]:', err.message);
-    next();
+    res.status(500).json({ error: 'Database connection failed. Please try again later.' });
   }
 });
 

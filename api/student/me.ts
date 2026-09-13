@@ -48,7 +48,12 @@ export default async function handler(req: Request, res: Response) {
     });
   }
 
-  await connectToDatabase();
+  try {
+    await connectToDatabase();
+  } catch (dbErr: any) {
+    console.error('[DB Connection Error]:', dbErr);
+    return res.status(500).json({ error: 'Database connection failed.' });
+  }
 
   try {
     const student = await Student.findOne({ id: studentId });

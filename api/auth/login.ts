@@ -48,7 +48,12 @@ export default async function handler(req: Request, res: Response) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  await connectToDatabase();
+  try {
+    await connectToDatabase();
+  } catch (dbErr: any) {
+    console.error('[DB Connection Error]:', dbErr);
+    return res.status(500).json({ error: 'Database connection failed.' });
+  }
 
   const { identifier, password } = req.body || {};
   if (!identifier || !password) {
